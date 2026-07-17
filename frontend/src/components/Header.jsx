@@ -11,11 +11,13 @@ const Header = () => {
 
   const { isAuthenticated, user } = useSelector((s) => s.auth);
   const { totalQty } = useSelector((s) => s.cart);
-  const { ids } = useSelector((s) => s.wishlist); // ✅ wishlist count
+  const { ids } = useSelector((s) => s.wishlist);
 
   const navClass = ({ isActive }) =>
-    `px-3 py-2 rounded-md text-sm font-medium transition ${
-      isActive ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100"
+    `flex-shrink-0 px-3 py-2 rounded-md text-sm font-medium transition ${
+      isActive
+        ? "bg-blue-600 text-white"
+        : "text-gray-700 hover:bg-gray-100"
     }`;
 
   const onLogout = () => {
@@ -27,12 +29,17 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b">
-      <div className="container max-w-6xl h-16 flex items-center justify-between gap-4">
-        <Link to="/" className="text-xl font-extrabold text-blue-600">
+      <div className="container max-w-6xl mx-auto px-4 py-2 flex items-center gap-4">
+        {/* Logo */}
+        <Link
+          to="/"
+          className="text-xl font-extrabold text-blue-600 flex-shrink-0"
+        >
           ShopVerse
         </Link>
 
-        <nav className="flex items-center gap-2">
+        {/* Scrollable Navigation */}
+        <nav className="flex flex-1 items-center justify-start md:justify-end gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar">
           <NavLink to="/" className={navClass}>
             Home
           </NavLink>
@@ -43,12 +50,13 @@ const Header = () => {
 
           <NavLink to="/cart" className={navClass}>
             Cart{" "}
-            <span className="ml-1 text-xs text-gray-500">({totalQty || 0})</span>
+            <span className="ml-1 text-xs text-gray-500">
+              ({totalQty || 0})
+            </span>
           </NavLink>
 
           {isAuthenticated ? (
             <>
-              {/* ✅ Wishlist */}
               <NavLink to="/wishlist" className={navClass}>
                 Wishlist{" "}
                 <span className="ml-1 text-xs text-gray-500">
@@ -74,13 +82,13 @@ const Header = () => {
                 Profile
               </NavLink>
 
-              <span className="ml-2 hidden md:inline text-sm text-gray-600">
+              <span className="hidden md:inline ml-2 text-sm text-gray-600 flex-shrink-0">
                 Hi, <b className="text-gray-900">{user?.name}</b>
               </span>
 
               <button
                 onClick={onLogout}
-                className="ml-2 px-3 py-2 rounded-md text-sm font-medium bg-red-50 text-red-700 hover:bg-red-100"
+                className="flex-shrink-0 ml-2 px-3 py-2 rounded-md text-sm font-medium bg-red-50 text-red-700 hover:bg-red-100"
               >
                 Logout
               </button>
@@ -90,6 +98,7 @@ const Header = () => {
               <NavLink to="/login" className={navClass}>
                 Login
               </NavLink>
+
               <NavLink to="/register" className={navClass}>
                 Register
               </NavLink>
