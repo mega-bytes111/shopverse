@@ -45,7 +45,7 @@ exports.createOrder = async (req, res, next) => {
           : "Processing",
     });
 
-    // ✅ Reduce stock ONLY for COD (faster with Promise.all)
+    // ✅ Reduce stock ONLY for COD
     if (paymentMethod === "COD") {
       await Promise.all(
         orderItems.map(async (item) => {
@@ -61,7 +61,7 @@ exports.createOrder = async (req, res, next) => {
 
     const createdOrder = await order.save();
 
-    // ✅ Send email in background (non-blocking)
+    // ✅ Send email in background
     setImmediate(async () => {
       try {
         const dbUser = await User.findById(req.user.id).select("name email");
@@ -126,9 +126,10 @@ exports.getOrder = async (req, res, next) => {
       .populate("user", "name email phone");
 
     if (!order) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
     }
 
     if (
@@ -160,9 +161,10 @@ exports.updateOrder = async (req, res, next) => {
     const order = await Order.findById(req.params.id);
 
     if (!order) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
     }
 
     const previousStatus = order.orderStatus;
@@ -198,10 +200,7 @@ exports.updateOrder = async (req, res, next) => {
             message: html,
           });
         } catch (e) {
-          console.log(
-            "Email send failed (delivered background):",
-            e.message
-          );
+          console.log("Email send failed (delivered):", e.message);
         }
       });
     }
@@ -233,9 +232,10 @@ exports.cancelOrder = async (req, res, next) => {
     const order = await Order.findById(req.params.id);
 
     if (!order) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
     }
 
     if (order.user.toString() !== req.user.id) {
@@ -257,7 +257,7 @@ exports.cancelOrder = async (req, res, next) => {
       });
     }
 
-    // ✅ Restore stock only for COD
+    // ✅ Restore stock ONLY for COD
     if (order.paymentMethod === "COD") {
       await Promise.all(
         order.orderItems.map(async (item) => {
@@ -281,6 +281,41 @@ exports.cancelOrder = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Order cancelled successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ===============================
+// ✅ GET ALL ORDERS (ADMIN)
+// ===============================
+exports.getAllOrders = async (req, res, next) => {
+  try {
+    const { orderStatus, page = 1, limit = 10 } = req.query;
+
+    let filter = {};
+    if (orderStatus) filter.orderStatus = orderStatus;
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const orders = await Order.find(filter)
+      .populate("user", "name email")
+      .populate("orderItems.product", "name price")
+      .sort({ createdAt: -1 })
+      .limit(Number(limit))
+      .skip(skip)
+      .exec();
+
+    const total = await Order.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      total,
+      pages: Math.ceil(total / Number(limit)),
+      currentPage: Number(page),
+      data: orders,
     });
   } catch (error) {
     next(error);
