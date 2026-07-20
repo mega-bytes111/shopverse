@@ -1,8 +1,12 @@
 const Order = require("../models/Order");
+const Product = require("../models/Product");
 const User = require("../models/User");
+
 const sendEmail = require("../utils/sendEmail");
-const orderPlacedTemplate = require("../utils/emailTemplates/orderPlacedTemplate");
-const orderDeliveredTemplate = require("../utils/emailTemplates/orderDeliveredTemplate");
+const {
+  orderPlacedTemplate,
+  orderDeliveredTemplate,
+} = require("../utils/orderEmailTemplates");
 
 // 🟢 CREATE ORDER
 exports.createOrder = async (req, res) => {
