@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const path = require('path'); // ✅ ADD THIS
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -23,7 +24,7 @@ app.use(cors({
 // Static folder for uploads
 app.use('/uploads', express.static('uploads'));
 
-// Routes
+// ================= ROUTES =================
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
@@ -31,15 +32,17 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/payment', require('./routes/paymentRoutes'));
 app.use("/api/categories", require("./routes/categoryRoutes"));
 
-// Welcome Route
-app.get('/', (req, res) => {
-    res.json({ 
-        message: 'E-Commerce API is running!',
-        version: '1.0.0'
-    });
+// ================= FRONTEND SERVE (🔥 MAIN FIX) =================
+
+// 👉 frontend build serve karo
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+// 👉 SPA fallback (refresh fix)
+app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "../frontend/dist/index.html"));
 });
 
-// Error Handler Middleware (should be last)
+// ================= ERROR HANDLER =================
 app.use(errorHandler);
 
 // Start Server
