@@ -32,14 +32,8 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/payment', require('./routes/paymentRoutes'));
 app.use("/api/categories", require("./routes/categoryRoutes"));
 
-// ================= FRONTEND SERVE (🔥 MAIN FIX) =================
-
-// 👉 frontend build serve karo
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
-
-// 👉 SPA fallback (refresh fix)
-app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "../frontend/dist/index.html"));
+app.get("/", (req, res) => {
+  res.send("ShopVerse API is running ✅");
 });
 
 // ================= ERROR HANDLER =================
