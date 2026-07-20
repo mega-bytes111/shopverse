@@ -1,4 +1,4 @@
-const Order = require("../models/orderModel");
+const Order = require("../models/Order");
 const User = require("../models/userModel");
 const sendEmail = require("../utils/sendEmail");
 const orderPlacedTemplate = require("../utils/emailTemplates/orderPlacedTemplate");
