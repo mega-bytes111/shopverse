@@ -61,31 +61,32 @@ exports.createOrder = async (req, res, next) => {
 
     const createdOrder = await order.save();
 
-    // ✅ Send email in background
-    setImmediate(async () => {
-      try {
-        const dbUser = await User.findById(req.user.id).select("name email");
-        const expectedDelivery = new Date(
-          Date.now() + 5 * 24 * 60 * 60 * 1000
-        );
+    // ✅ SEND EMAIL (FIXED - no setImmediate)
+    try {
+      const dbUser = await User.findById(req.user.id).select("name email");
 
-        const html = orderPlacedTemplate({
-          appName: process.env.APP_NAME || "ShopVerse",
-          order: createdOrder,
-          user: dbUser,
-          frontendUrl: process.env.FRONTEND_URL,
-          expectedDelivery,
-        });
+      const expectedDelivery = new Date(
+        Date.now() + 5 * 24 * 60 * 60 * 1000
+      );
 
-        await sendEmail({
-          email: dbUser.email,
-          subject: `✅ Order Placed - ${createdOrder._id}`,
-          message: html,
-        });
-      } catch (e) {
-        console.log("Email send failed (background):", e.message);
-      }
-    });
+      const html = orderPlacedTemplate({
+        appName: process.env.APP_NAME || "ShopVerse",
+        order: createdOrder,
+        user: dbUser,
+        frontendUrl: process.env.FRONTEND_URL,
+        expectedDelivery,
+      });
+
+      await sendEmail({
+        email: dbUser.email,
+        subject: `✅ Order Placed - ${createdOrder._id}`,
+        html: html, // 🔥 IMPORTANT FIX
+      });
+
+      console.log("✅ Order placed email sent");
+    } catch (e) {
+      console.log("❌ Order email failed:", e);
+    }
 
     return res.status(201).json({
       success: true,
@@ -176,33 +177,31 @@ exports.updateOrder = async (req, res, next) => {
     order.orderStatus = orderStatus;
     await order.save();
 
-    // ✅ Send delivered email in background
+    // ✅ SEND DELIVERED EMAIL (FIXED)
     if (
       orderStatus === "Delivered" &&
       previousStatus !== "Delivered"
     ) {
-      setImmediate(async () => {
-        try {
-          const dbUser = await User.findById(order.user).select(
-            "name email"
-          );
+      try {
+        const dbUser = await User.findById(order.user).select("name email");
 
-          const html = orderDeliveredTemplate({
-            appName: process.env.APP_NAME || "ShopVerse",
-            order,
-            user: dbUser,
-            frontendUrl: process.env.FRONTEND_URL,
-          });
+        const html = orderDeliveredTemplate({
+          appName: process.env.APP_NAME || "ShopVerse",
+          order,
+          user: dbUser,
+          frontendUrl: process.env.FRONTEND_URL,
+        });
 
-          await sendEmail({
-            email: dbUser.email,
-            subject: `🎉 Delivered - Order ${order._id}`,
-            message: html,
-          });
-        } catch (e) {
-          console.log("Email send failed (delivered):", e.message);
-        }
-      });
+        await sendEmail({
+          email: dbUser.email,
+          subject: `🎉 Delivered - Order ${order._id}`,
+          html: html, // 🔥 IMPORTANT FIX
+        });
+
+        console.log("✅ Delivered email sent");
+      } catch (e) {
+        console.log("❌ Delivered email failed:", e);
+      }
     }
 
     res.status(200).json({
@@ -246,9 +245,7 @@ exports.cancelOrder = async (req, res, next) => {
     }
 
     if (
-      !["Processing", "Payment Pending"].includes(
-        order.orderStatus
-      )
+      !["Processing", "Payment Pending"].includes(order.orderStatus)
     ) {
       return res.status(400).json({
         success: false,
