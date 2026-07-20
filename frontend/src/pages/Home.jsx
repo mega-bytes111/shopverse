@@ -169,13 +169,7 @@ const Home = () => {
               Join ShopVerse and experience a premium ecommerce workflow.
             </p>
           </div>
-
-          <Link
-            to="/register"
-            className="rounded-xl bg-blue-600 px-6 py-3 font-bold hover:bg-blue-700 transition"
-          >
-            Create Account
-          </Link>
+          
         </div>
       </section>
     </>
